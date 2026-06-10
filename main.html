@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Senin için</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=Dancing+Script:wght@500;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Pacifico&family=Caveat:wght@500;700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --sarap: #5c0d18;
+    --sarap-koyu: #320710;
+    --krem: #f3e7cf;
+    --krem-soluk: rgba(243,231,207,.55);
+    --altin: #d8b56a;
+    --altin-soluk: rgba(216,181,106,.35);
+    --gul: #e8a0ae;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    background:
+      radial-gradient(ellipse 120% 80% at 50% 18%, #7a1322 0%, var(--sarap) 46%, var(--sarap-koyu) 100%);
+    color: var(--krem);
+    overflow: hidden;
+    font-family: 'Cormorant Garamond', serif;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
+  }
+  /* film greni — atmosfer */
+  #gren {
+    position: fixed; inset: -50%; z-index: 6; pointer-events: none; opacity: .05;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+    animation: gren 8s steps(10) infinite;
+  }
+  @keyframes gren { to { transform: translate(8%, 6%); } }
+  /* vinyet */
+  body::after {
+    content: ""; position: fixed; inset: 0; z-index: 5; pointer-events: none;
+    box-shadow: inset 0 0 220px rgba(20,3,7,.75);
+  }
+  #hearts-canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+  .ince-cizgi {
+    width: 64px; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--altin), transparent);
+  }
+
+  /* ——— Intro ——— */
+  #intro {
+    position: fixed; inset: 0; z-index: 8;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 26px; text-align: center; padding: 32px;
+    background: radial-gradient(ellipse at 50% 35%, rgba(122,19,34,.97), rgba(50,7,16,.995));
+    transition: opacity 1.2s ease, visibility 1.2s;
+  }
+  #intro.kapali { opacity: 0; visibility: hidden; }
+  #intro .ust {
+    font-family: 'Lora', serif; font-size: .78rem; letter-spacing: .42em;
+    text-transform: uppercase; color: var(--altin); opacity: 0;
+    animation: belir 1.2s ease .2s forwards;
+  }
+  #intro h1 {
+    font-family: 'Playfair Display', serif; font-weight: 500;
+    font-size: clamp(1.35rem, 3.2vw, 2.15rem); line-height: 1.65; max-width: 680px;
+    opacity: 0; animation: belir 1.2s ease .7s forwards;
+  }
+  #intro h1 em { font-style: italic; color: var(--altin); }
+  #intro .senin-icin {
+    font-family: 'Great Vibes', cursive;
+    font-size: clamp(2.6rem, 6vw, 4rem); color: var(--krem);
+    text-shadow: 0 0 34px rgba(216,181,106,.35);
+    opacity: 0; animation: belir 1.4s ease 1.4s forwards;
+  }
+  #intro .dokun {
+    margin-top: 26px; font-family: 'Lora', serif; font-size: .72rem;
+    letter-spacing: .34em; text-transform: uppercase; color: var(--krem-soluk);
+    opacity: 0; animation: belir 1.2s ease 2.2s forwards, nefes 2.6s ease-in-out 3.4s infinite;
+  }
+  @keyframes belir { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  @keyframes nefes { 0%,100% { opacity: .45; } 50% { opacity: .9; } }
+
+  /* ——— İlerleme ——— */
+  #ilerleme {
+    position: fixed; top: 30px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 12px; z-index: 3;
+  }
+  .nokta {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: rgba(243,231,207,.25); transition: all .45s; cursor: pointer;
+  }
+  .nokta.aktif { background: var(--altin); box-shadow: 0 0 9px var(--altin-soluk); transform: scale(1.5); }
+
+  /* ——— Sahne / 3D kart ——— */
+  #app {
+    position: relative; z-index: 1; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    perspective: 1500px;
+  }
+  #kart-sahne { width: min(660px, 88vw); height: min(430px, 66vh); }
+  #kart {
+    position: relative; width: 100%; height: 100%;
+    transform-style: preserve-3d;
+    transition: transform .9s cubic-bezier(.25,.8,.3,1);
+    will-change: transform;
+  }
+  .yuz {
+    position: absolute; inset: 0;
+    backface-visibility: hidden; -webkit-backface-visibility: hidden;
+    transform: rotateY(0) translateZ(1px);
+    border-radius: 4px;
+    /* opak zemin: arka yüz öne sızmasın */
+    background:
+      linear-gradient(160deg, rgba(243,231,207,.08), rgba(243,231,207,.02)),
+      linear-gradient(160deg, #6e1322, #4a0c16);
+    border: 1px solid var(--altin-soluk);
+    box-shadow: 0 34px 80px rgba(15,2,5,.55), inset 0 1px 0 rgba(243,231,207,.12);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 24px; padding: 48px 56px; text-align: center;
+  }
+  /* köşe süsleri — davetiye hissi */
+  .yuz::before, .yuz::after {
+    content: ""; position: absolute; width: 26px; height: 26px;
+    border: 1px solid var(--altin-soluk);
+  }
+  .yuz::before { top: 12px; left: 12px; border-right: none; border-bottom: none; }
+  .yuz::after { bottom: 12px; right: 12px; border-left: none; border-top: none; }
+  .yuz.arka { transform: rotateY(180deg) translateZ(1px); }
+  .etiket {
+    font-family: 'Lora', serif; font-size: .68rem;
+    letter-spacing: .38em; text-transform: uppercase; color: var(--altin); opacity: .85;
+  }
+  #soru {
+    font-size: clamp(1.3rem, 2.8vw, 1.95rem);
+    line-height: 1.55; color: var(--krem);
+    text-shadow: 0 2px 14px rgba(0,0,0,.3);
+  }
+  #cevap {
+    font-size: clamp(1.02rem, 1.95vw, 1.32rem);
+    line-height: 1.8; color: var(--krem); font-style: italic;
+    max-width: 540px;
+  }
+  #kalp {
+    font-size: 1.5rem; color: var(--gul); line-height: 1;
+    filter: drop-shadow(0 0 10px rgba(232,160,174,.45));
+    animation: atis 1.3s ease-in-out infinite;
+  }
+  @keyframes atis {
+    0%,100% { transform: scale(1); }
+    28% { transform: scale(1.14); }
+    44% { transform: scale(1); }
+    58% { transform: scale(1.08); }
+  }
+  .dokun-yazi {
+    font-family: 'Lora', serif; font-size: .68rem; letter-spacing: .3em;
+    text-transform: uppercase; color: var(--krem-soluk);
+  }
+  .imza-mini { font-family: 'Great Vibes', cursive; font-size: 1.5rem; color: var(--altin); opacity: .9; }
+
+  /* ——— Eros'un okları — sol/sağ navigasyon ——— */
+  .eros {
+    position: fixed; top: 50%; z-index: 4;
+    width: 96px; height: 40px; margin-top: -20px;
+    cursor: pointer; opacity: .4;
+    transition: opacity .35s, transform .35s;
+  }
+  .eros:hover { opacity: 1; }
+  #eros-sag { right: 26px; }
+  #eros-sol { left: 26px; transform: scaleX(-1); }
+  #eros-sag:hover { transform: translateX(6px); }
+  #eros-sol:hover { transform: scaleX(-1) translateX(6px); }
+  .eros svg { width: 100%; height: 100%; overflow: visible; }
+  .eros .cizgi { stroke: var(--altin); }
+  .eros .uc { fill: var(--gul); }
+
+  /* ——— Responsive ——— */
+  #cevap { overflow-y: auto; max-height: 100%; scrollbar-width: none; }
+  #cevap::-webkit-scrollbar { display: none; }
+
+  @media (max-width: 900px) {
+    #kart-sahne { width: min(640px, 92vw); height: min(460px, 62dvh); }
+    .eros { width: 72px; height: 32px; }
+    #eros-sag { right: 12px; }
+    #eros-sol { left: 12px; }
+  }
+  @media (max-width: 600px) {
+    #app { perspective: 1100px; }
+    #kart-sahne { width: 94vw; height: min(520px, 64dvh); }
+    .yuz { padding: 34px 24px; gap: 18px; border-radius: 6px; }
+    #soru { font-size: 1.18rem; line-height: 1.55; }
+    #cevap { font-size: 1rem; line-height: 1.7; }
+    .etiket { font-size: .6rem; letter-spacing: .3em; }
+    #ilerleme { top: 18px; gap: 9px; }
+    /* okları alta al — başparmakla ulaşılsın */
+    .eros { top: auto; bottom: 26px; margin-top: 0; width: 86px; opacity: .65; }
+    #intro h1 { font-size: 1.12rem; line-height: 1.7; }
+    #intro { gap: 18px; padding: 26px 20px; }
+    #final h1 { font-size: 3rem; }
+  }
+  @media (max-height: 520px) {
+    #kart-sahne { height: 84dvh; }
+    .yuz { padding: 22px 30px; gap: 12px; }
+    #ilerleme { top: 10px; }
+  }
+
+  /* ——— Final ——— */
+  #final {
+    position: fixed; inset: 0; z-index: 7;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+    background: radial-gradient(ellipse at center, rgba(122,19,34,.97), rgba(50,7,16,.995));
+    opacity: 0; visibility: hidden; transition: opacity 1.8s ease, visibility 1.8s;
+    text-align: center; padding: 24px;
+  }
+  #final.acik { opacity: 1; visibility: visible; }
+  #final .ust-etiket {
+    font-family: 'Lora', serif; font-size: .7rem; letter-spacing: .42em;
+    text-transform: uppercase; color: var(--altin); opacity: .85;
+  }
+  #final h1 {
+    font-family: 'Great Vibes', cursive; font-weight: 400;
+    font-size: clamp(3.2rem, 9vw, 6.8rem); color: var(--krem);
+    animation: parla 3s ease-in-out infinite;
+  }
+  @keyframes parla {
+    0%,100% { text-shadow: 0 0 24px rgba(216,181,106,.3); }
+    50% { text-shadow: 0 0 52px rgba(232,160,174,.55); }
+  }
+  #final h2 {
+    font-family: 'Cormorant Garamond', serif; font-style: italic;
+    font-size: clamp(1.2rem, 2.8vw, 1.7rem); color: var(--gul); font-weight: 500;
+  }
+  #final .imza {
+    font-family: 'Playfair Display', serif; font-style: italic;
+    margin-top: 16px; color: var(--altin); letter-spacing: .12em; font-size: 1.05rem;
+  }
+</style>
+</head>
+<body>
+<canvas id="hearts-canvas"></canvas>
+<div id="gren"></div>
+
+<div id="intro">
+  <div class="ust">bir gece, kaydırırken</div>
+  <div class="ince-cizgi"></div>
+  <h1>Instagram'da bir soru serisine denk geldim.<br/>
+  <em>“Onu sırılsıklam aşık bir şapşal gibi hissettirecek 6 soru”</em> diyordu.<br/>
+  Hepsini senin sesinle duydum. İşte cevaplarım.</h1>
+  <div class="senin-icin">Senin için.</div>
+  <div class="dokun">Dokunsana olm</div>
+</div>
+
+<div id="ilerleme"></div>
+
+<div id="app">
+  <div id="kart-sahne">
+    <div id="kart">
+      <div class="yuz on">
+        <div class="etiket" id="soru-etiket"></div>
+        <div id="soru"></div>
+        <div id="kalp">❦</div>
+        <div class="dokun-yazi">kalbime dokun</div>
+      </div>
+      <div class="yuz arka">
+        <div class="etiket">cevabım</div>
+        <div id="cevap"></div>
+        <div class="imza-mini">M.Y.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Eros'un okları -->
+<div id="eros-sol" class="eros" title="geri">
+  <svg viewBox="0 0 96 40" fill="none">
+    <line class="cizgi" x1="4" y1="20" x2="74" y2="20" stroke-width="1.2"/>
+    <path class="cizgi" d="M4 20 L14 13 M4 20 L14 27 M10 20 L20 13 M10 20 L20 27" stroke-width="1" opacity=".75"/>
+    <path class="uc" d="M0 -3 c-1.8-4.5-9-4.2-9 .4 c0 3.4 4.6 6.4 9 9 c4.4-2.6 9-5.6 9-9 c0-4.6-7.2-4.9-9-.4 z" transform="translate(85 20) rotate(-90) scale(.8)"/>
+  </svg>
+</div>
+<div id="eros-sag" class="eros" title="ileri">
+  <svg viewBox="0 0 96 40" fill="none">
+    <line class="cizgi" x1="4" y1="20" x2="74" y2="20" stroke-width="1.2"/>
+    <path class="cizgi" d="M4 20 L14 13 M4 20 L14 27 M10 20 L20 13 M10 20 L20 27" stroke-width="1" opacity=".75"/>
+    <path class="uc" d="M0 -3 c-1.8-4.5-9-4.2-9 .4 c0 3.4 4.6 6.4 9 9 c4.4-2.6 9-5.6 9-9 c0-4.6-7.2-4.9-9-.4 z" transform="translate(85 20) rotate(-90) scale(.8)"/>
+  </svg>
+</div>
+
+<div id="final">
+  <div class="ust-etiket">son söz</div>
+  <div class="ince-cizgi"></div>
+  <h1>Seni Seviyorum</h1>
+  <h2>yanındayken bile özlüyordum.</h2>
+  <div class="imza">M.Y.'den</div>
+</div>
+
+<script>
+"use strict";
+// M.Y.'den — dokunarak ilerleyen, Eros oklu, 3D kartlı sürpriz
+// Derleme: npx tsc  → dist/main.js
+const sorular = [
+    {
+        soru: "10 yaşındaki halin benimle tanışsaydı, bende ilk neyi aşırı cool bulurdu?",
+        cevap: "valla 10 yaşındaki ben önce köpek balıklı terliklerini görürdü, başka bir şeye bakacağını " +
+            "zannetmiyorum açıkçası. sonra “sigara paketinde niye 20 tane var” soruma “21 tanesi sığmadığı için” " +
+            "dediğini duyardı ve biterdi orada iş. ben nikotin reseptörü anlatıyorum, sen tek cümleyle kapatıyorsun yahu. " +
+            "bir de tohumdan kestane büyüttüğünü, marulları külle koruduğunu öğrense “bu abla büyücü mü” derdi. " +
+            "hâlâ öyle diyorum ben de, kelimeyi değiştirdim sadece.",
+        font: "'Playfair Display', serif",
+    },
+    {
+        soru: "Ailen “neden özellikle o?” diye sorsa, ona vereceğin ilk cevap ne olurdu?",
+        cevap: "derdim ki: bu kız gece vardiyasından çıkıp eve gelip bahçeye masa kurup güllerin arasında " +
+            "kendine romantik kahve saati yapıyor. kızartmayı yapıp kendisi yemiyor, herkes çay içerken " +
+            "o hâlâ dolap siliyor, kuyruğuna bastığı kedisinden özür dileyip gönlünü yaş mamayla alıyor. " +
+            "ve ben hayatımda bir kere sarıldığımda “ruhum çekildi” dedim, o kişi bu. " +
+            "başka açıklamam yok, sorgulamayınız efm.",
+        font: "'Dancing Script', cursive",
+    },
+    {
+        soru: "Yapmayı aniden bıraksam yokluğunu saniyesinde hissedeceğin o küçücük detayım ne?",
+        cevap: "gkdkgldkg'lerin. mesajın sonunda o yoksa üç kere okuyorum, kırdım mı acaba diye. " +
+            "bir de gecenin bir yarısı gelen “pişt napıyosun”ların var ya... dünyanın en güzel bildirim sesi o. " +
+            "ve tabii mwah. en uzun mesajı da yazsan onsuz eksik kalıyor, " +
+            "günü onunla kapatmaya alıştım ben. bırakırsan haberim olur bak, saniyesinde.",
+        font: "'Cormorant Garamond', serif",
+    },
+    {
+        soru: "Benim farkında olmadığım ama seni çok mutlu eden, dünyalara bedel olan o küçük hareketim hangisi?",
+        cevap: "ben “bugün ne yaptın herrrr şeyi anlat” diyorum, sen de gerçekten hepsini anlatıyorsun: " +
+            "gitar, kabak kızartması, güller, civcivler, marullar, abinle din tartışması... " +
+            "sen sıradan cevap sanıyorsun ya, değil. beni yanında olmadığım günlere davet ediyorsun resmen. " +
+            "bir de “varınca yaz” demelerin var. birinin beni merak etmesinin ne demek olduğunu " +
+            "senden öğrendim ben yeniden. dünyalara bedel dediğin bunlar işte.",
+        font: "'Pacifico', cursive",
+    },
+    {
+        soru: "Benimle ilgili “bu huyu yaşlansak da asla değişmesin” dediğin şey ne?",
+        cevap: "her şeyi üstüne alınıp beni darlaman. ciddiyim bak, kendi ağzınla itiraf ettin " +
+            "“üstüme alınıp seni darlamak hoşuma gidiyor” diye, e benim de hoşuma gidiyor napayım. " +
+            "bir de “laf olsun diye dedim” demelerin, trip atacağım diye kahveyi yakman, " +
+            "yorgunluktan bacakların titrerken bile civcivlere yetişmen... " +
+            "sen böyle kal yahu. seksen yaşında da beni darla, ben yine “hep destek tam destek” derim.",
+        font: "'Caveat', cursive",
+    },
+    {
+        soru: "Sana “evet ya, gerçekten beni seçti” hissini sonuna kadar yaşatan o davranışım ne?",
+        cevap: "gece vardiyasında iki dakikalık molanda beni araman. iki dakika la... onu bile bana ayırıyorsun. " +
+            "bir de annene “muhammet'le buluşacağım” deyip “git dedi” diye yazman var, " +
+            "saklamadın yani beni, seçtiğini söyledin. ve tabii o tren. " +
+            "“tren biletimi aldım yarın geliyorum” yazdığın gün var ya... " +
+            "sen trenden inip sarıldığında ben eve dönmüş gibi hissettim. hâlâ öyle hissediyorum.",
+        font: "'Lora', serif",
+    },
+];
+// 7. font (Great Vibes): intro "Senin için.", kart imzası ve finaldeki yazı.
+// ——— elemanlar ———
+const introEl = document.getElementById("intro");
+const kartEl = document.getElementById("kart");
+const kartSahne = document.getElementById("kart-sahne");
+const soruEtiketEl = document.getElementById("soru-etiket");
+const soruEl = document.getElementById("soru");
+const cevapEl = document.getElementById("cevap");
+const ilerlemeEl = document.getElementById("ilerleme");
+const erosSol = document.getElementById("eros-sol");
+const erosSag = document.getElementById("eros-sag");
+const finalEl = document.getElementById("final");
+let indeks = 0;
+let cevapAcik = false;
+let basladi = false;
+let finalAcik = false;
+// ilerleme noktaları (6 soru + final)
+const noktalar = [];
+for (let i = 0; i <= sorular.length; i++) {
+    const n = document.createElement("div");
+    n.className = "nokta";
+    n.addEventListener("click", (e) => { e.stopPropagation(); git(i); });
+    ilerlemeEl.appendChild(n);
+    noktalar.push(n);
+}
+function noktaGuncelle(aktif) {
+    noktalar.forEach((n, i) => n.classList.toggle("aktif", i === aktif));
+}
+// ——— 3D tilt ———
+let tiltX = 0, tiltY = 0, hedefTiltX = 0, hedefTiltY = 0;
+document.addEventListener("mousemove", (e) => {
+    hedefTiltY = (e.clientX / window.innerWidth - 0.5) * 12;
+    hedefTiltX = -(e.clientY / window.innerHeight - 0.5) * 9;
+});
+function kartTransform() {
+    tiltX += (hedefTiltX - tiltX) * 0.07;
+    tiltY += (hedefTiltY - tiltY) * 0.07;
+    const flip = cevapAcik ? 180 : 0;
+    kartEl.style.transform =
+        `rotateX(${tiltX.toFixed(2)}deg) rotateY(${(flip + tiltY).toFixed(2)}deg)`;
+    requestAnimationFrame(kartTransform);
+}
+// ——— akış ———
+function soruGoster() {
+    const s = sorular[indeks];
+    cevapAcik = false;
+    soruEl.style.fontFamily = s.font;
+    cevapEl.style.fontFamily = s.font;
+    soruEtiketEl.textContent = `soru ${indeks + 1} · ${sorular.length}`;
+    soruEl.textContent = s.soru;
+    cevapEl.textContent = s.cevap;
+    noktaGuncelle(indeks);
+    kartSahne.style.opacity = "0";
+    kartSahne.style.transition = "opacity .4s";
+    window.setTimeout(() => { kartSahne.style.opacity = "1"; }, 70);
+}
+function finalGoster() {
+    finalAcik = true;
+    finalEl.classList.add("acik");
+    noktaGuncelle(sorular.length);
+    kalpYagmuru = true;
+}
+function finalKapat() {
+    finalAcik = false;
+    finalEl.classList.remove("acik");
+    kalpYagmuru = false;
+}
+function git(i) {
+    if (!basladi)
+        return;
+    if (i < 0)
+        i = 0;
+    if (i >= sorular.length) {
+        finalGoster();
+        return;
+    }
+    if (finalAcik)
+        finalKapat();
+    indeks = i;
+    soruGoster();
+}
+// dokununca akış: intro → soru → cevap → sonraki soru → ... → final
+function dokun(e) {
+    if (!basladi) {
+        basladi = true;
+        introEl.classList.add("kapali");
+        soruGoster();
+        return;
+    }
+    if (finalAcik)
+        return; // finalde sadece oklarla / noktalarla gezilir
+    kalpPatlat(e.clientX, e.clientY);
+    if (!cevapAcik) {
+        cevapAcik = true; // kart dönsün, cevap görünsün
+    }
+    else {
+        git(indeks + 1);
+    }
+}
+document.body.addEventListener("click", dokun);
+// Eros okları
+erosSag.addEventListener("click", (e) => { e.stopPropagation(); git(finalAcik ? 0 : indeks + 1); });
+erosSol.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (finalAcik) {
+        finalKapat();
+        git(sorular.length - 1);
+        return;
+    }
+    if (cevapAcik) {
+        cevapAcik = false;
+        return;
+    }
+    git(indeks - 1);
+});
+// klavye
+document.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowRight") {
+        if (basladi)
+            git(indeks + (finalAcik ? 0 : 1));
+    }
+    else if (e.key === "ArrowLeft")
+        erosSol.click();
+});
+const kanvas = document.getElementById("hearts-canvas");
+const ctx = kanvas.getContext("2d");
+let kalpler = [];
+let kalpYagmuru = false;
+function boyutla() {
+    kanvas.width = window.innerWidth;
+    kanvas.height = window.innerHeight;
+}
+window.addEventListener("resize", boyutla);
+boyutla();
+function yeniKalp(x, y, patlama = false) {
+    return {
+        x: x ?? Math.random() * kanvas.width,
+        y: y ?? kanvas.height + 20,
+        z: 0.3 + Math.random() * 0.7,
+        boyut: 6 + Math.random() * 13,
+        hiz: 0.4 + Math.random() * 1.3,
+        salinim: 0.35 + Math.random() * 0.95,
+        faz: Math.random() * Math.PI * 2,
+        patlama,
+        omur: 1,
+    };
+}
+function kalpPatlat(x, y) {
+    for (let i = 0; i < 10; i++) {
+        kalpler.push(yeniKalp(x + (Math.random() - 0.5) * 60, y, true));
+    }
+}
+function kalpCiz(k) {
+    ctx.save();
+    const px = tiltY * k.z * 2;
+    const py = -tiltX * k.z * 2;
+    ctx.translate(k.x + px, k.y + py);
+    const s = (k.boyut * k.z) / 16;
+    ctx.scale(s, s);
+    // zarif olsun: düşük opaklık, sıcak tonlar
+    ctx.globalAlpha = Math.max(0, Math.min(0.16 + k.z * 0.3, k.omur));
+    ctx.fillStyle = k.z > 0.72 ? "#e8a0ae" : "#d8b56a";
+    ctx.beginPath();
+    ctx.moveTo(0, 4);
+    ctx.bezierCurveTo(-8, -6, -16, 2, 0, 14);
+    ctx.bezierCurveTo(16, 2, 8, -6, 0, 4);
+    ctx.fill();
+    ctx.restore();
+}
+function dongu() {
+    ctx.clearRect(0, 0, kanvas.width, kanvas.height);
+    const hedef = kalpYagmuru ? 70 : 16;
+    while (kalpler.length < hedef)
+        kalpler.push(yeniKalp());
+    for (const k of kalpler) {
+        k.y -= k.hiz * k.z * (k.patlama ? 2.4 : 1);
+        k.faz += 0.018;
+        k.x += Math.sin(k.faz) * k.salinim;
+        if (k.patlama)
+            k.omur -= 0.012;
+        kalpCiz(k);
+    }
+    kalpler = kalpler.filter((k) => k.y > -40 && k.omur > 0);
+    requestAnimationFrame(dongu);
+}
+dongu();
+kartTransform();
+noktaGuncelle(0);
+
+</script>
+</body>
+</html>
